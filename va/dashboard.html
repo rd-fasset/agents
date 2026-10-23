@@ -1,0 +1,220 @@
+<title>Rikesh's Desk</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Figtree:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one triage column — status strip, "since you were away", then queues by priority. */
+:root {
+  --bg: #f3f5f2; --surface: #ffffff; --ink: #18211d; --muted: #5d6b64; --line: #dbe2dd;
+  --accent: #2f6f5e; --accent-soft: #e2efe9;
+  --urgent: #b4321f; --urgent-soft: #fbe7e3; --high: #a86507; --high-soft: #fbf0dc;
+  --normal: #3b5f8f; --normal-soft: #e5edf7; --fyi: #6b7570; --fyi-soft: #eceeec;
+  --f-display: "Bricolage Grotesque", "Avenir Next", system-ui, sans-serif;
+  --f-body: "Figtree", "Segoe UI", system-ui, sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #121815; --surface: #1a221e; --ink: #e6ece8; --muted: #94a39b; --line: #2b3631;
+  --accent: #7cc4ab; --accent-soft: #1f342c;
+  --urgent: #f08a76; --urgent-soft: #3a1f1a; --high: #e8b061; --high-soft: #362a16; --normal: #8fb2e3; --normal-soft: #1c2738; --fyi: #a2ada7; --fyi-soft: #222a26;
+  color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #121815; --surface: #1a221e; --ink: #e6ece8; --muted: #94a39b; --line: #2b3631;
+  --accent: #7cc4ab; --accent-soft: #1f342c;
+  --urgent: #f08a76; --urgent-soft: #3a1f1a; --high: #e8b061; --high-soft: #362a16; --normal: #8fb2e3; --normal-soft: #1c2738; --fyi: #a2ada7; --fyi-soft: #222a26;
+  color-scheme: dark; }
+body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 15px; line-height: 1.5; }
+.wrap { max-width: 880px; margin: 0 auto; padding-block: 28px 64px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 28px; }
+header { display: grid; gap: 10px; }
+h1 { font-family: var(--f-display); font-weight: 700; font-size: clamp(26px, 5vw, 34px); margin: 0; letter-spacing: -0.01em; text-wrap: balance; }
+h2 { font-family: var(--f-display); font-weight: 500; font-size: 19px; margin: 0; }
+.clock { font-family: var(--f-mono); font-size: 13px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 6px 18px; }
+.clock b { color: var(--ink); font-weight: 500; }
+.runline { font-size: 14px; color: var(--muted); max-width: 70ch; }
+.counts { display: flex; flex-wrap: wrap; gap: 8px; }
+.count { font-family: var(--f-mono); font-size: 12.5px; padding: 4px 10px; border-radius: 999px; background: var(--fyi-soft); color: var(--fyi); }
+.count[data-p="urgent"] { background: var(--urgent-soft); color: var(--urgent); }
+.count[data-p="high"] { background: var(--high-soft); color: var(--high); }
+.count[data-p="normal"] { background: var(--normal-soft); color: var(--normal); }
+.away { background: var(--accent-soft); border-radius: 12px; padding: 16px 18px; display: grid; gap: 10px; }
+.away h2 { color: var(--accent); }
+.away ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; }
+.tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--line); overflow-x: auto; }
+.tabs button { font: 500 14px var(--f-body); color: var(--muted); background: none; border: 0; border-bottom: 2px solid transparent; padding: 8px 12px; cursor: pointer; white-space: nowrap; }
+.tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent); }
+.tabs button:focus-visible, .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.group { display: grid; gap: 10px; }
+.group-label { font: 500 12px var(--f-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.item { background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--fyi); border-radius: 10px; padding: 14px 16px; display: grid; gap: 8px; min-width: 0; }
+.item[data-p="urgent"] { border-left-color: var(--urgent); }
+.item[data-p="high"] { border-left-color: var(--high); }
+.item[data-p="normal"] { border-left-color: var(--normal); }
+.item.new .title::after { content: "new"; font: 500 11px var(--f-mono); color: var(--accent); background: var(--accent-soft); border-radius: 4px; padding: 1px 6px; margin-left: 8px; vertical-align: 2px; }
+.meta { display: flex; flex-wrap: wrap; gap: 4px 12px; font: 12.5px var(--f-mono); color: var(--muted); }
+.src { text-transform: lowercase; color: var(--ink); }
+.title { font-weight: 600; font-size: 16px; overflow-wrap: anywhere; }
+.summary { color: var(--ink); overflow-wrap: anywhere; }
+.rec { font-size: 14px; color: var(--muted); overflow-wrap: anywhere; }
+.rec strong { color: var(--accent); font-weight: 600; }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.btn { font: 500 13px var(--f-body); padding: 6px 12px; border-radius: 7px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; text-decoration: none; }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--surface); }
+.btn:hover { border-color: var(--accent); }
+.empty { color: var(--muted); padding: 24px; text-align: center; border: 1px dashed var(--line); border-radius: 10px; }
+.notice { font-size: 13px; color: var(--urgent); }
+@media (prefers-reduced-motion: no-preference) { .item { transition: opacity .2s; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Rikesh's Desk</h1>
+    <div class="clock"><span>Melbourne <b id="mel">—</b></span><span>Dubai <b id="dxb">—</b></span><span>Last check <b id="last">waiting for first run</b></span></div>
+    <div class="runline" id="runline">The assistant checks Slack, Gmail, Calendar, Jira and GitHub every 30 minutes while the Claude app is open, and adds anything that needs you here.</div>
+    <div class="counts" id="counts"></div>
+    <div class="notice" id="notice" hidden></div>
+  </header>
+
+  <section class="away" id="away" hidden>
+    <h2>Since you were last here</h2>
+    <ul id="away-list"></ul>
+  </section>
+
+  <nav class="tabs" role="tablist">
+    <button role="tab" id="tab-open" aria-selected="true" data-tab="open">Needs you</button>
+    <button role="tab" id="tab-handled" aria-selected="false" data-tab="handled">Handled by assistant</button>
+    <button role="tab" id="tab-done" aria-selected="false" data-tab="done">Done &amp; snoozed</button>
+  </nav>
+
+  <main id="list" class="group">
+    <div class="empty">Items appear here after the assistant's first check: replies to draft, meetings to decide, reviews, incidents.</div>
+  </main>
+</div>
+
+<script>
+const ORDER = ["urgent", "high", "normal", "fyi"];
+const LABEL = { urgent: "Urgent", high: "High", normal: "Normal", fyi: "For your information" };
+let db = null, items = [], tab = "open", seenBaseline = null;
+
+function tick() {
+  const f = tz => new Intl.DateTimeFormat("en-AU", { timeZone: tz, weekday: "short", hour: "2-digit", minute: "2-digit" }).format(new Date());
+  document.getElementById("mel").textContent = f("Australia/Melbourne");
+  document.getElementById("dxb").textContent = f("Asia/Dubai");
+}
+tick(); setInterval(tick, 30000);
+
+function ago(iso) {
+  if (!iso) return "";
+  const m = Math.round((Date.now() - new Date(iso)) / 60000);
+  if (m < 1) return "just now";
+  if (m < 60) return m + " min ago";
+  const h = Math.round(m / 60);
+  return h < 48 ? h + " h ago" : Math.round(h / 24) + " d ago";
+}
+
+function bucket(it) {
+  if (it.status === "done") return "done";
+  if (it.status === "snoozed" && (!it.snoozeUntil || new Date(it.snoozeUntil) > new Date())) return "done";
+  if (it.action === "handled" || it.priority === "fyi") return "handled";
+  return "open";
+}
+
+function el(tag, attrs = {}, text) {
+  const e = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v);
+  if (text != null) e.textContent = text;
+  return e;
+}
+
+function card(it) {
+  const c = el("article", { class: "item", "data-p": it.priority || "normal" });
+  if (seenBaseline && it.createdAt && new Date(it.createdAt) > new Date(seenBaseline) && bucket(it) === "open") c.classList.add("new");
+  const meta = el("div", { class: "meta" });
+  meta.append(el("span", { class: "src" }, it.source || "note"));
+  if (it.from) meta.append(el("span", {}, it.from));
+  meta.append(el("span", {}, ago(it.updatedAt || it.createdAt)));
+  c.append(meta, el("div", { class: "title" }, it.title || "(untitled)"));
+  if (it.summary) c.append(el("div", { class: "summary" }, it.summary));
+  if (it.recommendation) {
+    const r = el("div", { class: "rec" }); const s = el("strong", {}, "Suggested: ");
+    r.append(s, document.createTextNode(it.recommendation)); c.append(r);
+  }
+  const a = el("div", { class: "actions" });
+  if (it.draftLink) { const d = el("a", { class: "btn primary", href: it.draftLink, target: "_blank", rel: "noopener" }, "Review draft"); a.append(d); }
+  if (it.link) a.append(el("a", { class: "btn", href: it.link, target: "_blank", rel: "noopener" }, "Open"));
+  if (db) {
+    if (bucket(it) === "done") {
+      a.append(btn("Reopen", () => setStatus(it, { status: "open", snoozeUntil: null })));
+    } else {
+      a.append(btn("Done", () => setStatus(it, { status: "done" })));
+      a.append(btn("Snooze 1 day", () => setStatus(it, { status: "snoozed", snoozeUntil: new Date(Date.now() + 864e5).toISOString() })));
+    }
+  }
+  c.append(a);
+  return c;
+}
+
+function btn(label, fn) { const b = el("button", { class: "btn", type: "button" }, label); b.addEventListener("click", fn); return b; }
+
+async function setStatus(it, patch) {
+  try { await db.collection("items").doc(it.id).update({ ...patch, statusSetBy: "rikesh", updatedAt: new Date().toISOString() }); }
+  catch (e) { showNotice("Couldn't save that change (" + (e.code || "error") + "). Try again in a moment."); }
+}
+
+function showNotice(t) { const n = document.getElementById("notice"); n.textContent = t; n.hidden = false; }
+
+function render() {
+  const counts = document.getElementById("counts"); counts.replaceChildren();
+  const open = items.filter(i => bucket(i) === "open");
+  for (const p of ORDER.slice(0, 3)) {
+    const n = open.filter(i => i.priority === p).length;
+    if (n) counts.append(el("span", { class: "count", "data-p": p }, n + " " + p));
+  }
+  const handled = items.filter(i => bucket(i) === "handled").length;
+  if (handled) counts.append(el("span", { class: "count" }, handled + " handled"));
+
+  const away = document.getElementById("away"), list = document.getElementById("away-list");
+  const fresh = seenBaseline ? open.filter(i => i.createdAt && new Date(i.createdAt) > new Date(seenBaseline)) : [];
+  list.replaceChildren(...fresh.sort((a, b) => ORDER.indexOf(a.priority) - ORDER.indexOf(b.priority)).slice(0, 8)
+    .map(i => el("li", {}, (i.priority === "urgent" ? "Urgent: " : "") + i.title)));
+  away.hidden = fresh.length === 0;
+
+  const main = document.getElementById("list"); main.replaceChildren();
+  const shown = items.filter(i => bucket(i) === tab);
+  if (!shown.length) {
+    const msg = { open: items.length ? "Nothing needs you right now." : "Items appear here after the assistant's first check: replies to draft, meetings to decide, reviews, incidents.",
+      handled: "Meetings the assistant accepts and alerts it closes out will be listed here.", done: "Items you mark done or snooze land here." }[tab];
+    main.append(el("div", { class: "empty" }, msg)); return;
+  }
+  for (const p of ORDER) {
+    const g = shown.filter(i => (i.priority || "normal") === p)
+      .sort((a, b) => new Date(b.updatedAt || b.createdAt || 0) - new Date(a.updatedAt || a.createdAt || 0));
+    if (!g.length) continue;
+    const sec = el("section", { class: "group" });
+    sec.append(el("div", { class: "group-label" }, LABEL[p] + " · " + g.length), ...g.map(card));
+    main.append(sec);
+  }
+}
+
+document.querySelectorAll(".tabs button").forEach(b => b.addEventListener("click", () => {
+  tab = b.dataset.tab;
+  document.querySelectorAll(".tabs button").forEach(x => x.setAttribute("aria-selected", String(x === b)));
+  render();
+}));
+
+(async () => {
+  db = await window.claude?.use?.("db") ?? null;
+  if (!db) { showNotice("The assistant's data isn't available in this view. Open the page in the Claude app while signed in."); return; }
+  db.doc("meta/state").onSnapshot(s => {
+    const d = s.data() || {};
+    if (d.lastCheckedAt) document.getElementById("last").textContent = ago(d.lastCheckedAt);
+    if (d.lastRunSummary) document.getElementById("runline").textContent = d.lastRunSummary;
+  }, () => {});
+  try {
+    const v = await db.doc("meta/viewer").get();
+    seenBaseline = v.exists ? v.data().lastSeenAt : null;
+    await db.doc("meta/viewer").set({ lastSeenAt: new Date().toISOString(), previousSeenAt: seenBaseline || null });
+  } catch (e) {}
+  db.collection("items").onSnapshot(snap => { items = snap.docs.map(d => ({ id: d.id, ...d.data() })); render(); },
+    e => showNotice("Live updates stopped (" + e.code + "). Reload the page."));
+})();
+</script>
