@@ -31,6 +31,6 @@ problems="$(echo "$output" | grep -cE '^  (WARN|FAIL) ')"
 if [ "$status" -eq 0 ]; then
   message="Everything is up to date."
 else
-  message="$problems item(s) need you. Ask Claude: /update, or see the log."
+  message="$problems item(s) need you. Ask Claude: /rikeshs-dev-env, or see the log."
 fi
-/usr/bin/osascript -e "display notification \"$message\" with title \"Update agent\"" >/dev/null 2>&1
+/usr/bin/osascript -e "display notification \"$message\" with title \"rikeshs-dev-env\"" >/dev/null 2>&1

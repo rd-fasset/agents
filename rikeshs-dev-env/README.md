@@ -1,12 +1,12 @@
-# update: keeps the local dev environment current
+# rikeshs-dev-env: keeps the local dev environment current
 
 | File | What it is |
 |---|---|
 | `update.sh` | Does the work. Safe to run by hand: `./update.sh --dry-run` first if unsure. |
 | `config.sh` | Repo roots, repos to skip, greedy casks, Brewfile dump, macOS check. |
 | `scheduled.sh` | What launchd runs. Runs `update.sh` only if no full run has finished since the last Monday 10:00, then posts a notification. `--check` says whether a run is due. |
-| `install-schedule.sh` | Installs (or `--uninstall`s) the launchd job `com.rikesh.update-agent`. |
-| `skill/SKILL.md` | The `/update` command, read from `~/.claude/skills/update` (symlink to `skill/`). |
+| `install-schedule.sh` | Installs (or `--uninstall`s) the launchd job `com.rikesh.rikeshs-dev-env`. |
+| `skill/SKILL.md` | The `/rikeshs-dev-env` command, read from `~/.claude/skills/rikeshs-dev-env` (symlink to `skill/`). |
 | `Brewfile` | Written after each run (`brew bundle dump`). `brew bundle --file=Brewfile` rebuilds a machine. |
 | `logs/` | One log per run, last 30 kept. Not committed. |
 
@@ -32,7 +32,7 @@ It never pushes, resets, deletes or commits. Exit code 1 means something needs y
 
 A launchd job runs `scheduled.sh` every Monday at 10:00 and at login. If the Mac is asleep at
 10:00 on Monday, launchd runs it on wake. Either way there is one full run a week: any full run,
-including a manual `/update`, writes `logs/.last-run`, and later triggers that week do nothing.
+including a manual `/rikeshs-dev-env`, writes `logs/.last-run`, and later triggers that week do nothing.
 The run waits up to two minutes for the network, then posts a notification saying whether
 anything needs you. Output from launchd itself goes to `logs/launchd.log`.
 
@@ -42,6 +42,6 @@ the fetch (reported) rather than hanging the run.
 ## Setting it up on a new machine
 
 ```bash
-ln -s ~/scripts/agents/update/skill ~/.claude/skills/update
-bash ~/scripts/agents/update/install-schedule.sh
+ln -s ~/scripts/agents/rikeshs-dev-env/skill ~/.claude/skills/rikeshs-dev-env
+bash ~/scripts/agents/rikeshs-dev-env/install-schedule.sh
 ```

@@ -1,16 +1,16 @@
 ---
-name: update
-description: Rikesh's update agent. Use for "/update", "update my machine", "update brew", "pull my repos", or "is my dev environment up to date". Runs /Users/rikesh/scripts/agents/update/update.sh and resolves what it could not.
+name: rikeshs-dev-env
+description: Rikesh's dev-env agent. Use for "/rikeshs-dev-env", "update my machine", "update brew", "pull my repos", or "is my dev environment up to date". Runs /Users/rikesh/scripts/agents/rikeshs-dev-env/update.sh and resolves what it could not.
 ---
 
-# Update agent
+# rikeshs-dev-env agent
 
 Keeps the local developer environment current: Homebrew, every git checkout under the roots in
-`/Users/rikesh/scripts/agents/update/config.sh`, other installed tool managers, and a macOS update check.
+`/Users/rikesh/scripts/agents/rikeshs-dev-env/config.sh`, other installed tool managers, and a macOS update check.
 
 ## Run
 
-1. Run `/Users/rikesh/scripts/agents/update/update.sh` with Bash, in the background (brew can take
+1. Run `/Users/rikesh/scripts/agents/rikeshs-dev-env/update.sh` with Bash, in the background (brew can take
    several minutes). Pass flags the user asked for:
    - `--dry-run` for "what would update" or "check"
    - `--only brew` / `--only repos` / `--only tools,macos` to limit the steps
@@ -40,7 +40,7 @@ for. Never touch the repos the script skips.
 
 ## Schedule
 
-A launchd job (`com.rikesh.update-agent`) runs `scheduled.sh` every Monday at 10:00 and at login, and once
+A launchd job (`com.rikesh.rikeshs-dev-env`) runs `scheduled.sh` every Monday at 10:00 and at login, and once
 a week at most. For "when does it next run" or "did it run", use `scheduled.sh --check`, the newest
 file in `logs/` and `logs/launchd.log`. To change the schedule, edit `install-schedule.sh` and re-run
 it, and update the due-time calculation in `scheduled.sh` to match.

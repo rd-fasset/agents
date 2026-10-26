@@ -1,19 +1,19 @@
 #!/bin/bash
-# Installs the update agent as a launchd job: every Monday at 10:00, and at login. If the Mac is
+# Installs the rikeshs-dev-env agent as a launchd job: every Monday at 10:00, and at login. If the Mac is
 # asleep at 10:00 on Monday, launchd runs it on wake. scheduled.sh makes sure it runs once a week.
 #
 # Install:   bash install-schedule.sh
 # Uninstall: bash install-schedule.sh --uninstall
 
 set -e
-LABEL="com.rikesh.update-agent"
+LABEL="com.rikesh.rikeshs-dev-env"
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PLIST="$HOME/Library/LaunchAgents/$LABEL.plist"
 
 launchctl bootout "gui/$(id -u)/$LABEL" 2>/dev/null || true
 if [ "${1:-}" = "--uninstall" ]; then
   rm -f "$PLIST"
-  echo "Update agent schedule removed."
+  echo "rikeshs-dev-env schedule removed."
   exit 0
 fi
 

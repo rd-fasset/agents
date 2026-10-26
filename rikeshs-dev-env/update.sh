@@ -161,7 +161,7 @@ update_repo() {
   local before stash=""
   before="$(git -C "$repo" rev-parse HEAD)"
   if [ -n "$dirty" ]; then
-    git -C "$repo" stash push --quiet -m "update-agent $(date '+%F %T')" \
+    git -C "$repo" stash push --quiet -m "rikeshs-dev-env $(date '+%F %T')" \
       || { fail "$name: could not stash local changes, nothing done"; return; }
     stash="$(git -C "$repo" rev-parse 'stash@{0}')"
   fi
