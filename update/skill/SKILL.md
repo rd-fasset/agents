@@ -38,6 +38,13 @@ Keeps the local developer environment current: Homebrew, every git checkout unde
 Push, force-reset, delete branches or stashes, commit, or edit repos outside a rebase the user asked
 for. Never touch the repos the script skips.
 
+## Schedule
+
+A launchd job (`com.rikesh.update-agent`) runs `scheduled.sh` every Monday at 10:00 and at login, and once
+a week at most. For "when does it next run" or "did it run", use `scheduled.sh --check`, the newest
+file in `logs/` and `logs/launchd.log`. To change the schedule, edit `install-schedule.sh` and re-run
+it, and update the due-time calculation in `scheduled.sh` to match.
+
 ## Changing behaviour
 
 Settings (repo roots, skips, greedy casks, Brewfile dump, macOS check) live in `config.sh`. Edit

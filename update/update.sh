@@ -35,6 +35,7 @@ done
 
 # Non-interactive: never wait on a credential prompt or an editor.
 export GIT_TERMINAL_PROMPT=0 GIT_EDITOR=true HOMEBREW_NO_ENV_HINTS=1 HOMEBREW_NO_AUTO_UPDATE=1
+export GIT_SSH_COMMAND="${GIT_SSH_COMMAND:-ssh -o BatchMode=yes -o ConnectTimeout=15}"
 [ -x /opt/homebrew/bin/brew ] && eval "$(/opt/homebrew/bin/brew shellenv bash)"
 export PATH="$HOME/.local/bin:$PATH"
 
@@ -254,5 +255,7 @@ echo
 echo "================ summary"
 printf '%s\n' "${SUMMARY[@]}"
 echo "log: $LOG"
+# A full real run counts as this week's run for scheduled.sh.
+[ "$DRY_RUN" = 0 ] && [ "$ONLY" = "brew,repos,tools,macos" ] && date +%s > "$HERE/logs/.last-run"
 ls -1t "$HERE/logs"/*.log 2>/dev/null | tail -n +31 | xargs rm -f 2>/dev/null
 exit $ATTENTION
