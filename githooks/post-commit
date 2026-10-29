@@ -1,0 +1,5 @@
+#!/bin/bash
+# Keeps installed agent prompts in sync with the repo. Never blocks the commit.
+ROOT="$(git rev-parse --show-toplevel)"
+bash "$ROOT/va/install.sh" || echo "post-commit: va install failed; run va/install.sh by hand." >&2
+exit 0

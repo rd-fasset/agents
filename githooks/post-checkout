@@ -1,0 +1,6 @@
+#!/bin/bash
+# Keeps installed agent prompts in sync after switching branches. $3 = 1 for branch checkouts.
+[ "$3" = "1" ] || exit 0
+ROOT="$(git rev-parse --show-toplevel)"
+bash "$ROOT/va/install.sh" || echo "post-checkout: va install failed; run va/install.sh by hand." >&2
+exit 0
