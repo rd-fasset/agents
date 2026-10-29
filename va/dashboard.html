@@ -64,6 +64,15 @@ h2 { font-family: var(--f-display); font-weight: 500; font-size: 19px; margin: 0
 .btn:hover { border-color: var(--accent); }
 .empty { color: var(--muted); padding: 24px; text-align: center; border: 1px dashed var(--line); border-radius: 10px; }
 .notice { font-size: 13px; color: var(--urgent); }
+.ask { display: flex; gap: 8px; flex-wrap: wrap; }
+.ask input { flex: 1 1 220px; min-width: 0; font: 14px var(--f-body); color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 7px; padding: 6px 10px; }
+.ask input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.asks { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; font-size: 13.5px; }
+.asks li { overflow-wrap: anywhere; }
+.asks .st { font: 500 11px var(--f-mono); border-radius: 4px; padding: 1px 6px; margin-right: 6px; background: var(--fyi-soft); color: var(--fyi); }
+.asks .st[data-s="done"] { background: var(--accent-soft); color: var(--accent); }
+.asks .st[data-s="needs-you"] { background: var(--high-soft); color: var(--high); }
+.asks .res { color: var(--muted); }
 @media (prefers-reduced-motion: no-preference) { .item { transition: opacity .2s; } }
 </style>
 
@@ -74,6 +83,7 @@ h2 { font-family: var(--f-display); font-weight: 500; font-size: 19px; margin: 0
     <div class="runline" id="runline">The assistant checks Slack, Gmail, Calendar, Jira and GitHub every 30 minutes while the Claude app is open, and adds anything that needs you here.</div>
     <div class="counts" id="counts"></div>
     <div class="notice" id="notice" hidden></div>
+    <div id="general-ask"></div>
   </header>
 
   <section class="away" id="away" hidden>
@@ -95,7 +105,8 @@ h2 { font-family: var(--f-display); font-weight: 500; font-size: 19px; margin: 0
 <script>
 const ORDER = ["urgent", "high", "normal", "fyi"];
 const LABEL = { urgent: "Urgent", high: "High", normal: "Normal", fyi: "For your information" };
-let db = null, items = [], tab = "open", seenBaseline = null;
+const ASK_STATUS = { pending: "queued", done: "done", "needs-you": "needs you" };
+let db = null, items = [], instructions = [], tab = "open", seenBaseline = null;
 
 function tick() {
   const f = tz => new Intl.DateTimeFormat("en-AU", { timeZone: tz, weekday: "short", hour: "2-digit", minute: "2-digit" }).format(new Date());
@@ -144,7 +155,10 @@ function card(it) {
   const a = el("div", { class: "actions" });
   if (it.draftLink) { const d = el("a", { class: "btn primary", href: it.draftLink, target: "_blank", rel: "noopener" }, "Review draft"); a.append(d); }
   if (it.link) a.append(el("a", { class: "btn", href: it.link, target: "_blank", rel: "noopener" }, "Open"));
+  const asks = askList(instructions.filter(i => i.itemId === it.id));
+  if (asks) c.append(asks);
   if (db) {
+    a.append(btn("Tell the VA…", () => { a.hidden = true; c.append(askBox(it, () => { a.hidden = false; })); }));
     if (bucket(it) === "done") {
       a.append(btn("Reopen", () => setStatus(it, { status: "open", snoozeUntil: null })));
     } else {
@@ -173,6 +187,54 @@ function btn(label, fn) { const b = el("button", { class: "btn", type: "button" 
 async function setStatus(it, patch) {
   try { await db.collection("items").doc(it.id).update({ ...patch, statusSetBy: "rikesh", updatedAt: new Date().toISOString() }); }
   catch (e) { showNotice("Couldn't save that change (" + (e.code || "error") + "). Try again in a moment."); }
+}
+
+function askList(list) {
+  if (!list.length) return null;
+  const ul = el("ul", { class: "asks" });
+  for (const i of list.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))) {
+    const li = el("li");
+    li.append(el("span", { class: "st", "data-s": i.status }, ASK_STATUS[i.status] || i.status), document.createTextNode(i.text));
+    if (i.result) li.append(el("span", { class: "res" }, " — " + i.result));
+    ul.append(li);
+  }
+  return ul;
+}
+
+function askBox(it, onClose) {
+  const f = el("form", { class: "ask" });
+  const input = el("input", { type: "text", required: "", "aria-label": "Instruction for the assistant",
+    placeholder: it ? "e.g. add a follow-up for Friday" : "Ask the assistant to do something, e.g. remind me to chase Zand on Friday" });
+  const send = el("button", { class: "btn primary", type: "submit" }, "Send");
+  f.append(input, send);
+  if (onClose) f.append(btn("Cancel", () => { f.remove(); onClose(); }));
+  f.addEventListener("submit", async ev => {
+    ev.preventDefault();
+    const text = input.value.trim();
+    if (!text) return;
+    send.disabled = true;
+    const now = new Date().toISOString();
+    const doc = { text, status: "pending", createdAt: now, updatedAt: now };
+    if (it) Object.assign(doc, { itemId: it.id, itemTitle: it.title || "" });
+    try {
+      await db.collection("instructions").doc("ask-" + Date.now()).set(doc);
+      input.value = "";
+      if (onClose) { f.remove(); onClose(); }
+    } catch (e) { showNotice("Couldn't send that instruction (" + (e.code || "error") + "). Try again in a moment."); }
+    send.disabled = false;
+  });
+  setTimeout(() => input.focus());
+  return f;
+}
+
+function renderGeneralAsks() {
+  const box = document.getElementById("general-ask");
+  const general = instructions.filter(i => !i.itemId);
+  const kids = [askBox(null, null)];
+  const list = askList(general);
+  if (list) kids.push(list);
+  box.replaceChildren(...kids);
+  box.style.display = "grid"; box.style.gap = "8px";
 }
 
 function showNotice(t) { const n = document.getElementById("notice"); n.textContent = t; n.hidden = false; }
@@ -230,6 +292,9 @@ document.querySelectorAll(".tabs button").forEach(b => b.addEventListener("click
     await db.doc("meta/viewer").set({ lastSeenAt: new Date().toISOString(), previousSeenAt: seenBaseline || null });
   } catch (e) {}
   db.collection("items").onSnapshot(snap => { items = snap.docs.map(d => ({ id: d.id, ...d.data() })); render(); },
+    e => showNotice("Live updates stopped (" + e.code + "). Reload the page."));
+  renderGeneralAsks();
+  db.collection("instructions").onSnapshot(snap => { instructions = snap.docs.map(d => ({ id: d.id, ...d.data() })); renderGeneralAsks(); render(); },
     e => showNotice("Live updates stopped (" + e.code + "). Reload the page."));
 })();
 </script>

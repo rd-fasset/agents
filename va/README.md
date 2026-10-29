@@ -38,4 +38,7 @@ prompt change updates the installed copy; without them, run `install.sh` after e
 - To republish the dashboard after editing `dashboard.html`, ask Claude to publish it **to the
   existing URL** above. Publishing without that URL creates a new page with an empty database.
 - The dashboard's items live in the artifact's database, not in this repo.
+- To give the VA an instruction, type it in the dashboard: **Tell the VA…** on a card, or the box
+  under the header. The next check carries it out and shows the result next to it. Ask `/va` to
+  "do my dashboard asks" to run them now.
 - `profile.md` names colleagues and internal systems. Keep the repo private.

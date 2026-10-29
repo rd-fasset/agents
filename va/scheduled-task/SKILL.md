@@ -12,6 +12,15 @@ Read /Users/rikesh/scripts/agents/va/profile.md in full. It is the source of tru
 Load ArtifactData (ToolSearch "select:ArtifactData"). The dashboard is https://claude.ai/artifact/B41zYcuPDj9HM4C64A9jEa.
 - `get` meta/state. Window start = its `lastCheckedAt` minus 10 minutes. With no state yet, start 72 hours ago.
 - `list` the `items` collection (limit 1000). Keep each doc's id, status and version, for de-duplication and `if_version` pins.
+- `list` the `instructions` collection (limit 1000). Keep each doc's version.
+
+## Step 1b — carry out his dashboard instructions
+For each instruction with `status` `pending`, oldest first, follow "Instructions I give from the dashboard" in the profile:
+- Read the item it names (`itemId`), if any, for context.
+- Do what it asks, within the profile's rules. Typical asks: a follow-up for a day (new `followup-` item, snoozed until then), snooze, mark done, change priority, add a note, draft a reply, schedule a meeting with Fasset colleagues.
+- `update` the instruction (pin `if_version`): `status` `done`, or `needs-you` if it needs his yes in chat or you couldn't do it; `result` one plain sentence (e.g. "Follow-up added for Fri 31 Oct 09:00."); `handledAt` and `updatedAt` now.
+- Put the item changes in the Step 4 batch. A status change he asked for here is his change, so it's allowed.
+- Count them in `lastRunSummary` ("carried out 2 of your asks").
 
 ## Step 2 — gather, using the connectors (load tools with ToolSearch as needed)
 - **Slack:**

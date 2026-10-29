@@ -40,6 +40,11 @@ it (summary, sender, link, draft), act on it under the rules above, or set its `
   asking. Give it a short agenda line in the description. Then tell him what was booked.
 - If any attendee is external, or no slot passes the rules, propose 2–3 options and wait.
 
+## Dashboard asks ("do my dashboard asks", "what did I ask the VA")
+
+Run Step 1 and Step 1b of the scheduled task now, write the changes, and list each ask with its
+result. Any `needs-you` ask is waiting for his yes here in chat.
+
 ## Change a rule ("never auto-accept on Fridays", "add #channel to watch")
 
 Edit the profile file directly. Then confirm the change in one line.
