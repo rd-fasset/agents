@@ -17,11 +17,19 @@ autonomy rules. Load `ArtifactData` (and any connector tools you need) with Tool
 3. Reply with a short briefing:
    - urgent items first, then items that need a decision or reply (say which drafts are
      ready), then a one-line count of what was handled;
-   - each line names who it's from, what's needed, and a link;
+   - each line starts with the item's short ID (`VA-12`), then names who it's from, what's
+     needed, and a link;
    - end with the dashboard link.
 4. When he says "send it", "accept that" or "decline that" about a specific item, do exactly
    that one thing. That counts as approval for that item only. Then mark the item done
    (`update` with `if_version`).
+
+## An item by its ID ("VA-12", "va 12", "#12", "what's 12 about?")
+
+Find the item in `items` whose `ref` is that number (`query` with `{"ref": 12}`, or `list` and
+match). If none matches, say so; never guess another item. Then do what he asked with it: explain
+it (summary, sender, link, draft), act on it under the rules above, or set its `status`
+("done", "snooze", "reopen") with `update` and `if_version`.
 
 ## Schedule a meeting ("set up 30 min with Ubaid next week")
 

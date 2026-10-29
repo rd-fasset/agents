@@ -62,16 +62,19 @@ Load ArtifactData (ToolSearch "select:ArtifactData"). The dashboard is https://c
   - Use the stable ids described in the profile.
   - Set `createdAt` = `updatedAt` = now (ISO).
   - Set `status` to `open`.
+  - Set `ref` to the next short ID, counting up from `meta/state.nextRef` (1 if missing).
 - **Existing items:**
   - Use `update` with `if_version`, and only when something new happened.
+  - Exception: an item with no `ref` gets the next short ID now, even if nothing else changed.
   - Never change `status` unless new activity arrived on a `done` item. In that case set it back to `open`.
 - Run the housekeeping deletes described in the profile.
 - `set` meta/state with:
   - `lastCheckedAt`: now.
   - `lastRunSummary`: one plain sentence, e.g. "Checked 10:30. 2 urgent, 3 need replies (drafted), accepted 1 meeting. GitHub skipped: gh not installed."
+  - `nextRef`: one more than the last short ID handed out (unchanged if none were).
   - Pin meta/state with `if_version` if it already existed.
 
 ## Step 5 — finish
 - If an item is **urgent** and new in this run, send a push notification with PushNotification (load it with ToolSearch). Keep it one line, and don't include sensitive details.
-- End with a 3–5 line summary of what you found and did.
+- End with a 3–5 line summary of what you found and did. Name items by their short ID (`VA-12`).
 - If nothing new happened, update only meta/state and finish quietly.

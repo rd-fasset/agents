@@ -162,12 +162,13 @@ accept or decline. Leave the invite unanswered.
   - `items`: one doc per thing needing attention, with a stable id such as
     `slack-<channel>-<ts>`, `gmail-<threadId>`, `cal-<eventId>`, `jira-<key>`,
     `gh-<repo>-<number>` or `alert-<channel>-<incident>`.
-  - `meta/state` holds `lastCheckedAt` and `lastRunSummary`.
+  - `meta/state` holds `lastCheckedAt`, `lastRunSummary` and `nextRef`.
   - `meta/viewer` holds `lastSeenAt`, which the page sets when I open it.
 - Item fields:
 
   | Field | Value |
   |---|---|
+  | `ref` | the item's short ID, a whole number shown on the dashboard as `VA-<ref>` |
   | `title` | short text |
   | `summary` | 1–2 sentences |
   | `source` | `slack`, `email`, `calendar`, `jira`, `github` or `alert` |
@@ -180,6 +181,9 @@ accept or decline. Leave the invite unanswered.
   | `status` | `open`, `done` or `snoozed` |
   | `createdAt`, `updatedAt` | ISO timestamps |
 
+- Short IDs: every item gets a `ref` when it is created, taken from `meta/state.nextRef`
+  (start at 1 when it's missing), which then goes up by one. A ref is never reused or changed,
+  even after its item is deleted. Any item found without a `ref` gets one the same way.
 - `ArtifactData` writes to an existing document need `if_version`, the `version` from your
   read. Read the `items` collection once at the start of a run, then use `batch` for writes,
   pinning each existing doc and omitting the pin for new ones.

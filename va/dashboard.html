@@ -52,6 +52,8 @@ h2 { font-family: var(--f-display); font-weight: 500; font-size: 19px; margin: 0
 .item.new .title::after { content: "new"; font: 500 11px var(--f-mono); color: var(--accent); background: var(--accent-soft); border-radius: 4px; padding: 1px 6px; margin-left: 8px; vertical-align: 2px; }
 .meta { display: flex; flex-wrap: wrap; gap: 4px 12px; font: 12.5px var(--f-mono); color: var(--muted); }
 .src { text-transform: lowercase; color: var(--ink); }
+.ref { font: 500 12px var(--f-mono); color: var(--accent); background: var(--accent-soft); border: 0; border-radius: 4px; padding: 1px 6px; cursor: copy; }
+.ref:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .title { font-weight: 600; font-size: 16px; overflow-wrap: anywhere; }
 .summary { color: var(--ink); overflow-wrap: anywhere; }
 .rec { font-size: 14px; color: var(--muted); overflow-wrap: anywhere; }
@@ -129,6 +131,7 @@ function card(it) {
   const c = el("article", { class: "item", "data-p": it.priority || "normal" });
   if (seenBaseline && it.createdAt && new Date(it.createdAt) > new Date(seenBaseline) && bucket(it) === "open") c.classList.add("new");
   const meta = el("div", { class: "meta" });
+  if (it.ref) meta.append(refChip(it.ref));
   meta.append(el("span", { class: "src" }, it.source || "note"));
   if (it.from) meta.append(el("span", {}, it.from));
   meta.append(el("span", {}, ago(it.updatedAt || it.createdAt)));
@@ -153,6 +156,18 @@ function card(it) {
   return c;
 }
 
+function refLabel(ref) { return "VA-" + ref; }
+
+function refChip(ref) {
+  const b = el("button", { class: "ref", type: "button", title: "Copy ID to reference this item in Claude" }, refLabel(ref));
+  b.addEventListener("click", async () => {
+    try { await navigator.clipboard.writeText(refLabel(ref)); b.textContent = "copied"; }
+    catch (e) { b.textContent = refLabel(ref) + " (copy failed)"; }
+    setTimeout(() => { b.textContent = refLabel(ref); }, 1200);
+  });
+  return b;
+}
+
 function btn(label, fn) { const b = el("button", { class: "btn", type: "button" }, label); b.addEventListener("click", fn); return b; }
 
 async function setStatus(it, patch) {
@@ -175,7 +190,7 @@ function render() {
   const away = document.getElementById("away"), list = document.getElementById("away-list");
   const fresh = seenBaseline ? open.filter(i => i.createdAt && new Date(i.createdAt) > new Date(seenBaseline)) : [];
   list.replaceChildren(...fresh.sort((a, b) => ORDER.indexOf(a.priority) - ORDER.indexOf(b.priority)).slice(0, 8)
-    .map(i => el("li", {}, (i.priority === "urgent" ? "Urgent: " : "") + i.title)));
+    .map(i => el("li", {}, (i.ref ? refLabel(i.ref) + " · " : "") + (i.priority === "urgent" ? "Urgent: " : "") + i.title)));
   away.hidden = fresh.length === 0;
 
   const main = document.getElementById("list"); main.replaceChildren();
