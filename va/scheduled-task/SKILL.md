@@ -53,11 +53,13 @@ For each instruction with `status` `pending`, oldest first, follow "Instructions
     failing checks; `fyi` for approvals and merges of his PRs.
   - Action: `review` when his review is requested; otherwise `read`, or `reply` if someone asked him a question.
 - **Meetings** (follow "Meetings and the digest" in the profile):
-  - Look back 24 hours from now, not to the window start: transcripts and notes land after the meeting ends.
-  - Granola: `search_meetings` with `from_date` 24 hours ago and `include_shared` true. Drive: `search_files` for
-    transcripts and Gemini notes modified in the last 24 hours.
-  - Match records of the same meeting to one `key`. Skip keys already in a digest from the last 3 days, and
-    meetings whose transcript is still pending.
+  - Meeting look-back start = the earlier of 24 hours ago and the window start, but never more than 7 days ago.
+    Transcripts and notes land after a meeting ends, and checks only run while the app is open, so this catches
+    meetings that ended during a gap between runs.
+  - Granola: `search_meetings` with `from_date` the look-back start and `include_shared` true. Drive: `search_files`
+    for transcripts and Gemini notes modified since the look-back start.
+  - Match records of the same meeting to one `key`. Skip keys already in any digest, and meetings whose transcript
+    is still pending.
   - For each remaining meeting, read the notes and transcript, decide whether it counts and whether it's
     important, and extract the summary, decisions, his actions and team actions.
 
