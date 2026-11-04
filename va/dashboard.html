@@ -73,6 +73,14 @@ h2 { font-family: var(--f-display); font-weight: 500; font-size: 19px; margin: 0
 .asks .st[data-s="done"] { background: var(--accent-soft); color: var(--accent); }
 .asks .st[data-s="needs-you"] { background: var(--high-soft); color: var(--high); }
 .asks .res { color: var(--muted); }
+.day { display: grid; gap: 10px; }
+.mtg { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; display: grid; gap: 8px; min-width: 0; }
+.mtg h3 { font: 600 16px var(--f-body); margin: 0; overflow-wrap: anywhere; }
+.mtg h4 { font: 500 11.5px var(--f-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin: 4px 0 0; }
+.mtg ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; overflow-wrap: anywhere; }
+.mtg .mine li::marker { color: var(--accent); }
+.minor { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; font-size: 14px; color: var(--muted); }
+.minor b { color: var(--ink); font-weight: 600; }
 @media (prefers-reduced-motion: no-preference) { .item { transition: opacity .2s; } }
 </style>
 
@@ -80,7 +88,7 @@ h2 { font-family: var(--f-display); font-weight: 500; font-size: 19px; margin: 0
   <header>
     <h1>Rikesh's Desk</h1>
     <div class="clock"><span>Melbourne <b id="mel">—</b></span><span>Dubai <b id="dxb">—</b></span><span>Last check <b id="last">waiting for first run</b></span></div>
-    <div class="runline" id="runline">The assistant checks Slack, Gmail, Calendar, Jira and GitHub every 30 minutes while the Claude app is open, and adds anything that needs you here.</div>
+    <div class="runline" id="runline">The assistant checks Slack, Gmail, Calendar, Jira, GitHub and your meeting notes every 30 minutes while the Claude app is open, and adds anything that needs you here.</div>
     <div class="counts" id="counts"></div>
     <div class="notice" id="notice" hidden></div>
     <div id="general-ask"></div>
@@ -95,6 +103,7 @@ h2 { font-family: var(--f-display); font-weight: 500; font-size: 19px; margin: 0
     <button role="tab" id="tab-open" aria-selected="true" data-tab="open">Needs you</button>
     <button role="tab" id="tab-handled" aria-selected="false" data-tab="handled">Handled by assistant</button>
     <button role="tab" id="tab-done" aria-selected="false" data-tab="done">Done &amp; snoozed</button>
+    <button role="tab" id="tab-meetings" aria-selected="false" data-tab="meetings">Meetings</button>
   </nav>
 
   <main id="list" class="group">
@@ -106,7 +115,7 @@ h2 { font-family: var(--f-display); font-weight: 500; font-size: 19px; margin: 0
 const ORDER = ["urgent", "high", "normal", "fyi"];
 const LABEL = { urgent: "Urgent", high: "High", normal: "Normal", fyi: "For your information" };
 const ASK_STATUS = { pending: "queued", done: "done", "needs-you": "needs you" };
-let db = null, items = [], instructions = [], tab = "open", seenBaseline = null;
+let db = null, items = [], instructions = [], digests = [], tab = "open", seenBaseline = null;
 
 function tick() {
   const f = tz => new Intl.DateTimeFormat("en-AU", { timeZone: tz, weekday: "short", hour: "2-digit", minute: "2-digit" }).format(new Date());
@@ -256,6 +265,7 @@ function render() {
   away.hidden = fresh.length === 0;
 
   const main = document.getElementById("list"); main.replaceChildren();
+  if (tab === "meetings") { renderMeetings(main); return; }
   const shown = items.filter(i => bucket(i) === tab);
   if (!shown.length) {
     const msg = { open: items.length ? "Nothing needs you right now." : "Items appear here after the assistant's first check: replies to draft, meetings to decide, reviews, incidents.",
@@ -268,6 +278,64 @@ function render() {
     if (!g.length) continue;
     const sec = el("section", { class: "group" });
     sec.append(el("div", { class: "group-label" }, LABEL[p] + " · " + g.length), ...g.map(card));
+    main.append(sec);
+  }
+}
+
+function dayLabel(date) {
+  return new Intl.DateTimeFormat("en-AU", { timeZone: "UTC", weekday: "long", day: "numeric", month: "short" }).format(new Date(date + "T00:00:00Z"));
+}
+
+function timeLabel(iso) {
+  return iso ? new Intl.DateTimeFormat("en-AU", { timeZone: "Australia/Melbourne", hour: "2-digit", minute: "2-digit" }).format(new Date(iso)) : "";
+}
+
+function listBlock(heading, entries, cls) {
+  if (!entries || !entries.length) return [];
+  const ul = el("ul", cls ? { class: cls } : {});
+  ul.append(...entries);
+  return [el("h4", {}, heading), ul];
+}
+
+function meetingBlock(m) {
+  const c = el("article", { class: "mtg" });
+  const meta = el("div", { class: "meta" });
+  meta.append(el("span", {}, timeLabel(m.start)));
+  for (const s of m.sources || []) meta.append(el("span", { class: "src" }, s));
+  if (m.attendees) meta.append(el("span", {}, m.attendees));
+  c.append(meta, el("h3", {}, m.title || "(untitled meeting)"));
+  if (m.summary) c.append(el("div", { class: "summary" }, m.summary));
+  c.append(...listBlock("Decisions", (m.decisions || []).map(d => el("li", {}, d))));
+  c.append(...listBlock("Yours", (m.myActions || []).map(a => {
+    const li = el("li");
+    if (a.ref) li.append(refChip(a.ref), document.createTextNode(" "));
+    li.append(document.createTextNode(a.text));
+    return li;
+  }), "mine"));
+  c.append(...listBlock("Team", (m.teamActions || []).map(a => {
+    const li = el("li"); li.append(el("b", {}, a.owner + ": "), document.createTextNode(a.text + (a.due ? " (" + a.due + ")" : "")));
+    return li;
+  })));
+  const links = el("div", { class: "actions" });
+  for (const l of m.links || []) links.append(el("a", { class: "btn", href: l.url, target: "_blank", rel: "noopener" }, l.label));
+  if (links.childElementCount) c.append(links);
+  return c;
+}
+
+function renderMeetings(main) {
+  const days = digests.filter(d => (d.meetings || []).length).sort((a, b) => b.date.localeCompare(a.date)).slice(0, 7);
+  if (!days.length) { main.append(el("div", { class: "empty" }, "Meeting digests appear here once the assistant has read your Granola notes and Meet transcripts.")); return; }
+  for (const d of days) {
+    const sec = el("section", { class: "day" });
+    const ms = [...d.meetings].sort((a, b) => new Date(a.start || 0) - new Date(b.start || 0));
+    sec.append(el("div", { class: "group-label" }, dayLabel(d.date) + " · " + ms.length + (ms.length === 1 ? " meeting" : " meetings")));
+    sec.append(...ms.filter(m => m.important).map(meetingBlock));
+    const minor = ms.filter(m => !m.important);
+    if (minor.length) {
+      const ul = el("ul", { class: "minor" });
+      ul.append(...minor.map(m => { const li = el("li"); li.append(el("b", {}, timeLabel(m.start) + " " + (m.title || "")), document.createTextNode(m.summary ? " — " + m.summary : "")); return li; }));
+      sec.append(ul);
+    }
     main.append(sec);
   }
 }
@@ -292,6 +360,8 @@ document.querySelectorAll(".tabs button").forEach(b => b.addEventListener("click
     await db.doc("meta/viewer").set({ lastSeenAt: new Date().toISOString(), previousSeenAt: seenBaseline || null });
   } catch (e) {}
   db.collection("items").onSnapshot(snap => { items = snap.docs.map(d => ({ id: d.id, ...d.data() })); render(); },
+    e => showNotice("Live updates stopped (" + e.code + "). Reload the page."));
+  db.collection("digests").onSnapshot(snap => { digests = snap.docs.map(d => ({ id: d.id, ...d.data() })); render(); },
     e => showNotice("Live updates stopped (" + e.code + "). Reload the page."));
   renderGeneralAsks();
   db.collection("instructions").onSnapshot(snap => { instructions = snap.docs.map(d => ({ id: d.id, ...d.data() })); renderGeneralAsks(); render(); },

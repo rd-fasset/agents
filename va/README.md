@@ -2,7 +2,9 @@
 
 This is a Claude Code assistant. It triages Slack, Gmail, Google Calendar, Jira and GitHub into a
 private dashboard, drafts replies for approval, and auto-accepts meetings that pass the rules
-in `profile.md`.
+in `profile.md`. It also reads Granola notes and Google Meet transcripts (from Drive). It keeps a
+daily meeting digest on the dashboard's Meetings tab and turns each action of yours into an item.
+Team members' actions appear only in the digest.
 
 | File | What it is | Where Claude reads it from |
 |---|---|---|
@@ -37,7 +39,8 @@ prompt change updates the installed copy; without them, run `install.sh` after e
   or pull puts the repo version back. Make prompt changes in `scheduled-task/SKILL.md`.
 - To republish the dashboard after editing `dashboard.html`, ask Claude to publish it **to the
   existing URL** above. Publishing without that URL creates a new page with an empty database.
-- The dashboard's items live in the artifact's database, not in this repo.
+- The dashboard's items and meeting digests (`items` and `digests` collections) live in the
+  artifact's database, not in this repo. Ask `/va` for a "meeting digest" to build it now.
 - To give the VA an instruction, type it in the dashboard: **Tell the VA…** on a card, or the box
   under the header. The next check carries it out and shows the result next to it. Ask `/va` to
   "do my dashboard asks" to run them now.
