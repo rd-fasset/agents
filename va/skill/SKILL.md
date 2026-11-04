@@ -16,7 +16,7 @@ autonomy rules. Load `ArtifactData` (and any connector tools you need) with Tool
 2. Read the `items` collection and `meta/viewer.lastSeenAt`.
 3. Reply with a short briefing:
    - urgent items first, then items that need a decision or reply (say which drafts are
-     ready), then a one-line count of what was handled;
+     ready), then a one-line count of what was handled and of meetings digested today;
    - each line starts with the item's short ID (`VA-12`), then names who it's from, what's
      needed, and a link;
    - end with the dashboard link.
@@ -30,6 +30,18 @@ Find the item in `items` whose `ref` is that number (`query` with `{"ref": 12}`,
 match). If none matches, say so; never guess another item. Then do what he asked with it: explain
 it (summary, sender, link, draft), act on it under the rules above, or set its `status`
 ("done", "snooze", "reopen") with `update` and `if_version`.
+
+## Meeting digest ("meeting digest", "what came out of my meetings", "digest for yesterday")
+
+1. Run the Meetings parts of the scheduled task (Step 1 reads, the Meetings gather in Step 2, meeting
+   actions in Step 3, items and digests in Step 4) for the range he asked for (default: today in
+   Melbourne). Meetings already in a digest are kept, not redone, unless he asks to redo them.
+2. Reply with the digest, one block per important meeting in start order:
+   - title, time and who was there;
+   - decisions;
+   - his actions, each with its short ID (`VA-12`);
+   - team actions as "Owner: what (due)".
+   Then one line listing the other meetings, and the dashboard link (the Meetings tab).
 
 ## Schedule a meeting ("set up 30 min with Ubaid next week")
 
